@@ -23,7 +23,6 @@ export default function AdminLayout() {
         <nav onClick={close}>
           <NavLink to="/admin" end className={linkClass}>Dashboard</NavLink>
           <NavLink to="/admin/urunler" className={linkClass}>Ürünler</NavLink>
-          <NavLink to="/admin/kategoriler" className={linkClass}>Kategoriler</NavLink>
           <NavLink to="/admin/kullanicilar" className={linkClass}>Kullanıcılar</NavLink>
           <NavLink to="/admin/siparisler" className={linkClass}>Siparişler</NavLink>
         </nav>

@@ -9,4 +9,7 @@ import com.birbuketmutluluk.entity.CartItem;
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     Optional<CartItem> findByCartIdAndProductId(Long cartId, Long productId);
+
+    /** Bir ürünü tüm sepetlerden çıkarır (ürün silinirken FK engelini önler). */
+    void deleteByProductId(Long productId);
 }

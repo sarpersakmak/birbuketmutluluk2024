@@ -92,24 +92,33 @@ export default function AdminCategoriesPage() {
       <form className="bbm-admin-form" onSubmit={handleSubmit}>
         <h3>{editingId ? "Kategori Düzenle" : "Yeni Kategori"}</h3>
         <div className="bbm-form-row">
-          <input
-            type="text"
-            placeholder="Kategori adı"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Görsel adresi (opsiyonel)"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-          />
+          <label className="bbm-field">
+            <span className="bbm-field-label">Kategori Adı</span>
+            <input
+              type="text"
+              placeholder="Örn. Buketler"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Görsel Adresi (opsiyonel)</span>
+            <input
+              type="text"
+              placeholder="https://..."
+              value={form.imageUrl}
+              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            />
+          </label>
         </div>
-        <textarea
-          placeholder="Açıklama (opsiyonel)"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
+        <label className="bbm-field">
+          <span className="bbm-field-label">Açıklama (opsiyonel)</span>
+          <textarea
+            placeholder="Kategori açıklaması"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </label>
         <label className="bbm-check">
           <input
             type="checkbox"

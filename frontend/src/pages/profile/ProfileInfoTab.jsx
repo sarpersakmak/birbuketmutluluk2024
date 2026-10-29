@@ -69,10 +69,19 @@ export default function ProfileInfoTab() {
           <input type="email" value={user?.email || ""} disabled />
         </label>
         <div className="bbm-form-row">
-          <input name="firstName" placeholder="Ad" value={profile.firstName} onChange={changeProfile} />
-          <input name="lastName" placeholder="Soyad" value={profile.lastName} onChange={changeProfile} />
+          <label className="bbm-field">
+            <span className="bbm-field-label">Ad</span>
+            <input name="firstName" placeholder="Adınız" value={profile.firstName} onChange={changeProfile} />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Soyad</span>
+            <input name="lastName" placeholder="Soyadınız" value={profile.lastName} onChange={changeProfile} />
+          </label>
         </div>
-        <input name="phone" placeholder="Telefon" value={profile.phone} onChange={changeProfile} />
+        <label className="bbm-field">
+          <span className="bbm-field-label">Telefon</span>
+          <input name="phone" placeholder="05xx xxx xx xx" value={profile.phone} onChange={changeProfile} />
+        </label>
         <div className="bbm-form-actions">
           <button type="submit" className="bbm-btn" disabled={savingProfile}>
             {savingProfile ? "Kaydediliyor..." : "Bilgileri Güncelle"}
@@ -82,31 +91,40 @@ export default function ProfileInfoTab() {
 
       <form className="bbm-admin-form" onSubmit={submitPwd}>
         <h3>Şifre Değiştir</h3>
-        <input
-          type="password"
-          name="currentPassword"
-          placeholder="Mevcut şifre"
-          value={pwd.currentPassword}
-          onChange={changePwd}
-          autoComplete="current-password"
-        />
+        <label className="bbm-field">
+          <span className="bbm-field-label">Mevcut Şifre</span>
+          <input
+            type="password"
+            name="currentPassword"
+            placeholder="Mevcut şifreniz"
+            value={pwd.currentPassword}
+            onChange={changePwd}
+            autoComplete="current-password"
+          />
+        </label>
         <div className="bbm-form-row">
-          <input
-            type="password"
-            name="newPassword"
-            placeholder="Yeni şifre (min 8)"
-            value={pwd.newPassword}
-            onChange={changePwd}
-            autoComplete="new-password"
-          />
-          <input
-            type="password"
-            name="confirm"
-            placeholder="Yeni şifre (tekrar)"
-            value={pwd.confirm}
-            onChange={changePwd}
-            autoComplete="new-password"
-          />
+          <label className="bbm-field">
+            <span className="bbm-field-label">Yeni Şifre</span>
+            <input
+              type="password"
+              name="newPassword"
+              placeholder="En az 8 karakter"
+              value={pwd.newPassword}
+              onChange={changePwd}
+              autoComplete="new-password"
+            />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Yeni Şifre (Tekrar)</span>
+            <input
+              type="password"
+              name="confirm"
+              placeholder="Yeni şifre tekrar"
+              value={pwd.confirm}
+              onChange={changePwd}
+              autoComplete="new-password"
+            />
+          </label>
         </div>
         <div className="bbm-form-actions">
           <button type="submit" className="bbm-btn" disabled={savingPwd}>

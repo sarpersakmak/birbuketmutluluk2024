@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
+import WhatsAppButton from "../../components/WhatsAppButton";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { fetchProductBySlug } from "../../services/productService";
@@ -15,11 +17,12 @@ export default function ProductDetailPage() {
   const { isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const [product, setProduct] = useState(null);
-  const [activeImage, setActiveImage] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -30,8 +33,7 @@ export default function ProductDetailPage() {
       .then((res) => {
         if (!active) return;
         setProduct(res.data);
-        const main = res.data.images?.find((i) => i.isMain) || res.data.images?.[0];
-        setActiveImage(main?.imageUrl || null);
+        setActiveIndex(0);
       })
       .catch((err) => {
         if (!active) return;
@@ -57,7 +59,17 @@ export default function ProductDetailPage() {
     );
   }
 
+  const images = product.images && product.images.length > 0 ? product.images : [];
+  const hasMultiple = images.length > 1;
+  const activeUrl = images[activeIndex]?.imageUrl || PLACEHOLDER;
+
   const outOfStock = product.stockQuantity === 0;
+
+  const step = (dir, e) => {
+    if (e) e.stopPropagation();
+    if (images.length === 0) return;
+    setActiveIndex((i) => (i + dir + images.length) % images.length);
+  };
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -79,22 +91,47 @@ export default function ProductDetailPage() {
   return (
     <section className="bbm-page bbm-detail">
       <div className="bbm-detail-media">
-        <img
-          className="bbm-detail-main"
-          src={activeImage || PLACEHOLDER}
-          alt={product.name}
-          onError={(e) => {
-            e.currentTarget.src = PLACEHOLDER;
-          }}
-        />
-        {product.images?.length > 1 && (
-          <div className="bbm-thumbs">
-            {product.images.map((img) => (
+        <div className="bbm-detail-main-wrap">
+          <img
+            className="bbm-detail-main"
+            src={activeUrl}
+            alt={product.name}
+            onClick={() => images.length > 0 && setLightbox(true)}
+            onError={(e) => {
+              e.currentTarget.src = PLACEHOLDER;
+            }}
+          />
+          {images.length > 0 && <span className="bbm-zoom-hint">🔍 Büyütmek için dokun</span>}
+          {hasMultiple && (
+            <>
               <button
-                key={img.id}
                 type="button"
-                className={`bbm-thumb ${activeImage === img.imageUrl ? "is-active" : ""}`}
-                onClick={() => setActiveImage(img.imageUrl)}
+                className="bbm-detail-nav bbm-detail-nav-prev"
+                aria-label="Önceki görsel"
+                onClick={(e) => step(-1, e)}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="bbm-detail-nav bbm-detail-nav-next"
+                aria-label="Sonraki görsel"
+                onClick={(e) => step(1, e)}
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+
+        {hasMultiple && (
+          <div className="bbm-thumbs">
+            {images.map((img, i) => (
+              <button
+                key={img.id ?? i}
+                type="button"
+                className={`bbm-thumb ${i === activeIndex ? "is-active" : ""}`}
+                onClick={() => setActiveIndex(i)}
               >
                 <img src={img.imageUrl} alt="" loading="lazy" />
               </button>
@@ -104,7 +141,6 @@ export default function ProductDetailPage() {
       </div>
 
       <div className="bbm-detail-info">
-        <span className="bbm-card-cat">{product.categoryName}</span>
         <h1>{product.name}</h1>
         <div className="bbm-detail-price">{formatPrice(product.price)}</div>
 
@@ -144,8 +180,52 @@ export default function ProductDetailPage() {
           </button>
         </div>
 
+        <div className="bbm-detail-wa">
+          <WhatsAppButton
+            text="WhatsApp ile Sipariş Ver"
+            message={`Merhaba, "${product.name}" ürünü hakkında bilgi almak / sipariş vermek istiyorum.`}
+          />
+        </div>
+
         <Link to="/urunler" className="bbm-muted bbm-back">← Ürünlere dön</Link>
       </div>
+
+      {/* Büyük görsel (lightbox) — body'ye portal, en üst katman */}
+      {lightbox && createPortal(
+        <div className="bbm-lightbox" onClick={() => setLightbox(false)}>
+          <button type="button" className="bbm-lightbox-close" aria-label="Kapat">✕</button>
+          {hasMultiple && (
+            <button
+              type="button"
+              className="bbm-lightbox-nav bbm-lightbox-prev"
+              aria-label="Önceki"
+              onClick={(e) => step(-1, e)}
+            >
+              ‹
+            </button>
+          )}
+          <img
+            className="bbm-lightbox-img"
+            src={activeUrl}
+            alt={product.name}
+            onClick={(e) => e.stopPropagation()}
+            onError={(e) => {
+              e.currentTarget.src = PLACEHOLDER;
+            }}
+          />
+          {hasMultiple && (
+            <button
+              type="button"
+              className="bbm-lightbox-nav bbm-lightbox-next"
+              aria-label="Sonraki"
+              onClick={(e) => step(1, e)}
+            >
+              ›
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
     </section>
   );
 }

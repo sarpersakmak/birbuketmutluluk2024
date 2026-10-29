@@ -9,6 +9,8 @@ import { CartProvider } from "./context/CartContext";
 import AdminLayout from "./layouts/AdminLayout";
 import MainLayout from "./layouts/MainLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/cart/CartPage";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/urunler" element={<ProductListPage />} />
           <Route path="/urunler/:slug" element={<ProductDetailPage />} />
+          <Route path="/hakkimizda" element={<AboutPage />} />
+          <Route path="/iletisim" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 

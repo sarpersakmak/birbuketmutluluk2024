@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import ConfirmModal from "../../components/ConfirmModal";
-import { fetchCategories } from "../../services/categoryService";
 import {
   createProduct,
   deleteProduct,
@@ -10,6 +9,7 @@ import {
   fetchProducts,
   updateProduct,
 } from "../../services/productService";
+import { uploadImage } from "../../services/uploadService";
 import { formatPrice } from "../../utils/format";
 
 const EMPTY_FORM = {
@@ -29,13 +29,13 @@ const EMPTY_FORM = {
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingIdx, setUploadingIdx] = useState(null);
 
   const loadProducts = () => {
     setLoading(true);
@@ -46,9 +46,6 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
-    fetchCategories()
-      .then((res) => setCategories(res.data))
-      .catch(() => setCategories([]));
     loadProducts();
   }, []);
 
@@ -101,18 +98,30 @@ export default function AdminProductsPage() {
     if (!images.some((i) => i.isMain)) images[0].isMain = true;
     setForm({ ...form, images });
   };
+  const handleFileUpload = async (index, file) => {
+    if (!file) return;
+    setUploadingIdx(index);
+    try {
+      const res = await uploadImage(file);
+      updateImage(index, res.data.url);
+      toast.success("Görsel yüklendi.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Görsel yüklenemedi.");
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error("Ürün adı zorunludur.");
-    if (!form.categoryId) return toast.error("Kategori seçiniz.");
     if (!form.price || Number(form.price) <= 0) return toast.error("Fiyat 0'dan büyük olmalıdır.");
     if (form.stockQuantity === "" || Number(form.stockQuantity) < 0)
       return toast.error("Geçerli bir stok giriniz.");
 
     const payload = {
       name: form.name.trim(),
-      categoryId: Number(form.categoryId),
+      categoryId: null,
       description: form.description,
       price: Number(form.price),
       stockQuantity: Number(form.stockQuantity),
@@ -148,8 +157,12 @@ export default function AdminProductsPage() {
   const confirmDelete = async () => {
     setDeleting(true);
     try {
-      await deleteProduct(toDelete.id);
-      toast.success("Ürün silindi.");
+      const res = await deleteProduct(toDelete.id);
+      if (res.data && res.data.hardDeleted === false) {
+        toast.info(res.data.message);
+      } else {
+        toast.success(res.data?.message || "Ürün silindi.");
+      }
       setToDelete(null);
       loadProducts();
     } catch (err) {
@@ -167,69 +180,77 @@ export default function AdminProductsPage() {
       <form className="bbm-admin-form" onSubmit={handleSubmit}>
         <h3>{editingId ? "Ürün Düzenle" : "Yeni Ürün"}</h3>
 
-        <div className="bbm-form-row">
+        <label className="bbm-field">
+          <span className="bbm-field-label">Ürün Adı</span>
           <input
             type="text"
-            placeholder="Ürün adı"
+            placeholder="Örn. Soğuk Porselen Gül Panosu"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-          <select
-            value={form.categoryId}
-            onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-          >
-            <option value="">Kategori seçiniz</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        </label>
 
-        <textarea
-          placeholder="Açıklama"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
+        <label className="bbm-field">
+          <span className="bbm-field-label">Açıklama</span>
+          <textarea
+            placeholder="Ürün açıklaması"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </label>
 
         <div className="bbm-form-row">
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Fiyat (₺)"
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
-          />
-          <input
-            type="number"
-            min="0"
-            placeholder="Stok"
-            value={form.stockQuantity}
-            onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
-          />
+          <label className="bbm-field">
+            <span className="bbm-field-label">Fiyat (₺)</span>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0,00"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Stok</span>
+            <input
+              type="number"
+              min="0"
+              placeholder="Adet"
+              value={form.stockQuantity}
+              onChange={(e) => setForm({ ...form, stockQuantity: e.target.value })}
+            />
+          </label>
         </div>
 
         <div className="bbm-form-row">
-          <input
-            type="text"
-            placeholder="Üretim süresi (ör. 3-5 gün)"
-            value={form.productionTime}
-            onChange={(e) => setForm({ ...form, productionTime: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Renk"
-            value={form.color}
-            onChange={(e) => setForm({ ...form, color: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="Boyut"
-            value={form.size}
-            onChange={(e) => setForm({ ...form, size: e.target.value })}
-          />
+          <label className="bbm-field">
+            <span className="bbm-field-label">Üretim Süresi</span>
+            <input
+              type="text"
+              placeholder="Örn. 3-5 gün"
+              value={form.productionTime}
+              onChange={(e) => setForm({ ...form, productionTime: e.target.value })}
+            />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Renk</span>
+            <input
+              type="text"
+              placeholder="Örn. Pudra"
+              value={form.color}
+              onChange={(e) => setForm({ ...form, color: e.target.value })}
+            />
+          </label>
+          <label className="bbm-field">
+            <span className="bbm-field-label">Boyut</span>
+            <input
+              type="text"
+              placeholder="Örn. Orta"
+              value={form.size}
+              onChange={(e) => setForm({ ...form, size: e.target.value })}
+            />
+          </label>
         </div>
 
         <div className="bbm-check-row">
@@ -260,15 +281,34 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="bbm-images-editor">
-          <strong>Görseller (URL)</strong>
+          <strong>Görseller</strong>
+          <small className="bbm-muted">Bilgisayardan yükle ya da bir görsel adresi (URL) yapıştır.</small>
           {form.images.map((img, index) => (
             <div className="bbm-image-row" key={index}>
+              {img.imageUrl ? (
+                <img className="bbm-image-preview" src={img.imageUrl} alt="" />
+              ) : (
+                <span className="bbm-image-preview bbm-image-preview-empty">—</span>
+              )}
               <input
                 type="text"
-                placeholder="https://..."
+                placeholder="https://... veya dosya yükle"
                 value={img.imageUrl}
                 onChange={(e) => updateImage(index, e.target.value)}
               />
+              <label className="bbm-btn bbm-btn-ghost bbm-btn-sm bbm-file-btn">
+                {uploadingIdx === index ? "Yükleniyor..." : "Dosya Seç"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  disabled={uploadingIdx === index}
+                  onChange={(e) => {
+                    handleFileUpload(index, e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
               <label className="bbm-check">
                 <input
                   type="radio"
@@ -307,7 +347,6 @@ export default function AdminProductsPage() {
           <thead>
             <tr>
               <th>Ad</th>
-              <th>Kategori</th>
               <th>Fiyat</th>
               <th>Stok</th>
               <th>İşlemler</th>
@@ -317,7 +356,6 @@ export default function AdminProductsPage() {
             {products.map((p) => (
               <tr key={p.id}>
                 <td>{p.name}</td>
-                <td>{p.categoryName}</td>
                 <td>{formatPrice(p.price)}</td>
                 <td>{p.stockQuantity === 0 ? "Tükendi" : p.stockQuantity}</td>
                 <td className="bbm-row-actions">
@@ -336,7 +374,7 @@ export default function AdminProductsPage() {
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} className="bbm-muted">Henüz ürün yok.</td>
+                <td colSpan={4} className="bbm-muted">Henüz ürün yok.</td>
               </tr>
             )}
           </tbody>

@@ -74,8 +74,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html")
                         .permitAll()
-                        // Public ürün/kategori okuma
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**")
+                        // Public ürün/kategori okuma + yüklenen görseller
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/products/**", "/api/categories/**", "/api/provinces/**", "/uploads/**")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

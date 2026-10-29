@@ -28,7 +28,6 @@ public record ProductRequest(
         @Min(value = 0, message = "Stok 0 veya daha büyük olmalıdır.")
         Integer stockQuantity,
 
-        @NotNull(message = "Kategori zorunludur.")
         Long categoryId,
 
         Boolean available,

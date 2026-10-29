@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import ProductCard from "../components/ProductCard";
-import { fetchCategories } from "../services/categoryService";
 import { fetchFeatured } from "../services/productService";
 
 const TRUST_BADGES = [
@@ -14,11 +13,9 @@ const TRUST_BADGES = [
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([]);
-  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     fetchFeatured().then((res) => setFeatured(res.data)).catch(() => setFeatured([]));
-    fetchCategories().then((res) => setCategories(res.data)).catch(() => setCategories([]));
   }, []);
 
   return (
@@ -50,23 +47,6 @@ export default function HomePage() {
           <span className="bbm-hero-flower">❀</span>
         </div>
       </section>
-
-      {/* Kategoriler */}
-      {categories.length > 0 && (
-        <section className="bbm-section">
-          <div className="bbm-section-head">
-            <h2>Kategoriler</h2>
-            <Link to="/urunler" className="bbm-section-link">Tümünü gör →</Link>
-          </div>
-          <div className="bbm-chip-row">
-            {categories.map((c) => (
-              <Link key={c.id} to={`/urunler?categoryId=${c.id}`} className="bbm-chip">
-                {c.name}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Öne çıkan ürünler */}
       {featured.length > 0 && (

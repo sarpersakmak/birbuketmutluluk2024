@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.birbuketmutluluk.dto.PageResponse;
+import com.birbuketmutluluk.dto.ProductDeleteResult;
 import com.birbuketmutluluk.dto.ProductRequest;
 import com.birbuketmutluluk.dto.ProductResponse;
 import com.birbuketmutluluk.dto.ProductSummaryResponse;
@@ -69,8 +70,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/api/admin/products/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ProductDeleteResult delete(@PathVariable Long id) {
+        return productService.delete(id);
     }
 }

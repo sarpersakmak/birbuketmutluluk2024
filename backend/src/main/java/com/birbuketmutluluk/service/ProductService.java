@@ -2,6 +2,7 @@ package com.birbuketmutluluk.service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.birbuketmutluluk.dto.PageResponse;
+import com.birbuketmutluluk.dto.ProductDeleteResult;
 import com.birbuketmutluluk.dto.ProductImageDto;
 import com.birbuketmutluluk.dto.ProductRequest;
 import com.birbuketmutluluk.dto.ProductResponse;
@@ -23,7 +25,9 @@ import com.birbuketmutluluk.entity.Category;
 import com.birbuketmutluluk.entity.Product;
 import com.birbuketmutluluk.entity.ProductImage;
 import com.birbuketmutluluk.exception.ResourceNotFoundException;
+import com.birbuketmutluluk.repository.CartItemRepository;
 import com.birbuketmutluluk.repository.CategoryRepository;
+import com.birbuketmutluluk.repository.OrderItemRepository;
 import com.birbuketmutluluk.repository.ProductImageRepository;
 import com.birbuketmutluluk.repository.ProductRepository;
 import com.birbuketmutluluk.util.SlugGenerator;
@@ -39,13 +43,19 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
     private final CategoryRepository categoryRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public ProductService(ProductRepository productRepository,
                           ProductImageRepository productImageRepository,
-                          CategoryRepository categoryRepository) {
+                          CategoryRepository categoryRepository,
+                          CartItemRepository cartItemRepository,
+                          OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.productImageRepository = productImageRepository;
         this.categoryRepository = categoryRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     // ---------------------------------------------------------------
@@ -89,8 +99,7 @@ public class ProductService {
 
     @Transactional
     public ProductResponse create(ProductRequest request) {
-        Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı."));
+        Category category = resolveCategory(request.categoryId());
 
         Product product = Product.builder()
                 .category(category)
@@ -118,9 +127,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ürün bulunamadı."));
 
-        Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı."));
-
+        Category category = resolveCategory(request.categoryId());
         product.setCategory(category);
         product.setName(request.name());
         product.setSlug(resolveSlug(request.slug(), request.name(), id));
@@ -149,10 +156,25 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public ProductDeleteResult delete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ürün bulunamadı."));
+
+        // Ürünü tüm sepetlerden çıkar (FK engelini ve bozuk sepetleri önler).
+        cartItemRepository.deleteByProductId(id);
+
+        // Geçmiş bir siparişte yer alıyorsa hard-delete yapılmaz (snapshot/geçmiş korunur);
+        // ürün satıştan kaldırılır (pasife alınır).
+        if (orderItemRepository.existsByProductId(id)) {
+            product.setAvailable(false);
+            product.setFeatured(false);
+            return new ProductDeleteResult(false,
+                    "Bu ürün geçmiş siparişlerde yer aldığı için tamamen silinemedi; satıştan kaldırıldı (pasife alındı).");
+        }
+
+        // Sipariş geçmişi yoksa tamamen sil (product_images cascade/orphanRemoval ile gider).
         productRepository.delete(product);
+        return new ProductDeleteResult(true, "Ürün silindi.");
     }
 
     // ---------------------------------------------------------------
@@ -206,8 +228,15 @@ public class ProductService {
         }
 
         List<Long> productIds = products.stream().map(Product::getId).toList();
-        Map<Long, String> mainImages = productImageRepository.findByProductIdInAndIsMainTrue(productIds).stream()
-                .collect(Collectors.toMap(pi -> pi.getProduct().getId(), ProductImage::getImageUrl, (a, b) -> a));
+
+        // Tüm görseller (ana önce, sonra display_order) tek sorguda; ürün başına sıralı liste.
+        Map<Long, List<String>> imagesByProduct = new LinkedHashMap<>();
+        for (ProductImage pi : productImageRepository
+                .findByProductIdInOrderByIsMainDescDisplayOrderAsc(productIds)) {
+            imagesByProduct
+                    .computeIfAbsent(pi.getProduct().getId(), k -> new ArrayList<>())
+                    .add(pi.getImageUrl());
+        }
 
         List<Long> categoryIds = products.stream()
                 .map(p -> p.getCategory().getId())
@@ -217,17 +246,22 @@ public class ProductService {
                 .collect(Collectors.toMap(Category::getId, Category::getName));
 
         return products.stream()
-                .map(p -> new ProductSummaryResponse(
-                        p.getId(),
-                        p.getName(),
-                        p.getSlug(),
-                        p.getPrice(),
-                        p.getStockQuantity(),
-                        p.isAvailable(),
-                        p.isFeatured(),
-                        p.getCategory().getId(),
-                        categoryNames.get(p.getCategory().getId()),
-                        mainImages.get(p.getId())))
+                .map(p -> {
+                    List<String> images = imagesByProduct.getOrDefault(p.getId(), List.of());
+                    String main = images.isEmpty() ? null : images.get(0);
+                    return new ProductSummaryResponse(
+                            p.getId(),
+                            p.getName(),
+                            p.getSlug(),
+                            p.getPrice(),
+                            p.getStockQuantity(),
+                            p.isAvailable(),
+                            p.isFeatured(),
+                            p.getCategory().getId(),
+                            categoryNames.get(p.getCategory().getId()),
+                            main,
+                            images);
+                })
                 .toList();
     }
 
@@ -258,6 +292,24 @@ public class ProductService {
                     .build();
             product.addImage(image);
         }
+    }
+
+    /**
+     * Kategori opsiyoneldir. Verilmezse varsayılan "Genel" kategorisine atanır
+     * (yoksa oluşturulur). Böylece ürün eklemek için kategori seçmek gerekmez.
+     */
+    private Category resolveCategory(Long categoryId) {
+        if (categoryId != null) {
+            return categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı."));
+        }
+        return categoryRepository.findBySlug("genel")
+                .orElseGet(() -> categoryRepository.save(Category.builder()
+                        .name("Genel")
+                        .slug("genel")
+                        .description("Genel ürünler")
+                        .active(true)
+                        .build()));
     }
 
     private String resolveSlug(String provided, String name, Long currentId) {

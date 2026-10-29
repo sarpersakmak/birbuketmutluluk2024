@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/ProductCard";
-import { fetchCategories } from "../../services/categoryService";
 import { fetchProducts } from "../../services/productService";
 
 const SORT_OPTIONS = [
@@ -13,11 +11,8 @@ const SORT_OPTIONS = [
 ];
 
 export default function ProductListPage() {
-  const [searchParams] = useSearchParams();
-  const [categories, setCategories] = useState([]);
   const [filters, setFilters] = useState({
     q: "",
-    categoryId: searchParams.get("categoryId") || "",
     minPrice: "",
     maxPrice: "",
     sort: "newest",
@@ -27,13 +22,6 @@ export default function ProductListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // Kategorileri bir kez yükle.
-  useEffect(() => {
-    fetchCategories()
-      .then((res) => setCategories(res.data))
-      .catch(() => setCategories([]));
-  }, []);
-
   // Filtre/sayfa değişince ürünleri yükle.
   useEffect(() => {
     let active = true;
@@ -42,7 +30,6 @@ export default function ProductListPage() {
 
     const params = { sort: filters.sort, page, size: 12 };
     if (filters.q.trim()) params.q = filters.q.trim();
-    if (filters.categoryId) params.categoryId = filters.categoryId;
     if (filters.minPrice) params.minPrice = filters.minPrice;
     if (filters.maxPrice) params.maxPrice = filters.maxPrice;
 
@@ -79,14 +66,6 @@ export default function ProductListPage() {
           value={filters.q}
           onChange={handleFilterChange}
         />
-        <select name="categoryId" value={filters.categoryId} onChange={handleFilterChange}>
-          <option value="">Tüm Kategoriler</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
         <input
           type="number"
           name="minPrice"

@@ -5,23 +5,29 @@
    =============================================================== */
 
 :root {
-  --bbm-bg: #faf7f3;
+  --bbm-bg: #f6ede6;             /* sıcak porselen / fildişi */
   --bbm-surface: #ffffff;
-  --bbm-cream: #f3ebe2;
-  --bbm-text: #2c2320;
-  --bbm-muted: #7a6f68;
-  --bbm-primary: #c08457;        /* pudra / terracotta */
-  --bbm-primary-dark: #6e4a32;   /* koyu */
-  --bbm-leaf: #7c8a5a;           /* yaprak yeşili */
-  --bbm-border: #e7ded6;
+  --bbm-cream: #f1e3d8;          /* şampanya / krem */
+  --bbm-text: #35262a;           /* sıcak koyu */
+  --bbm-muted: #897a77;
+  --bbm-primary: #c26d75;        /* gül kurusu */
+  --bbm-primary-dark: #9e4b56;   /* mürdüm / romantik terracotta */
+  --bbm-leaf: #5c6b48;           /* zengin adaçayı / zeytin */
+  --bbm-rose: #c26d75;           /* gül kurusu */
+  --bbm-rose-dark: #9e4b56;      /* koyu gül / mürdüm */
+  --bbm-powder: #d9a79a;         /* şakayık / pudra */
+  --bbm-border: #ead8cd;
   --bbm-error: #c0392b;
+  /* İçerik kartı: yoğun çiçek arka planı üstünde yazıları okunur kılan
+     sıcak, hafif saydam krem panel (arka plan altından hafifçe sızar). */
+  --bbm-panel: rgba(255, 252, 249, 0.9);
 
   --bbm-font-body: "Nunito Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --bbm-font-head: "Playfair Display", Georgia, "Times New Roman", serif;
 
-  --bbm-radius: 14px;
-  --bbm-shadow-sm: 0 2px 8px rgba(110, 74, 50, 0.07);
-  --bbm-shadow-md: 0 10px 28px rgba(110, 74, 50, 0.12);
+  --bbm-radius: 16px;
+  --bbm-shadow-sm: 0 2px 10px rgba(158, 75, 86, 0.08);
+  --bbm-shadow-md: 0 12px 30px rgba(158, 75, 86, 0.16);
 
   font-family: var(--bbm-font-body);
   color: var(--bbm-text);
@@ -154,7 +160,8 @@ a:hover {
   cursor: not-allowed;
 }
 .bbm-btn-ghost {
-  background: transparent;
+  /* Çiçekli arka plan üstünde de okunur olması için dolu krem zemin */
+  background: var(--bbm-surface);
   color: var(--bbm-primary-dark);
   border: 1px solid var(--bbm-border);
 }
@@ -244,12 +251,13 @@ a:hover {
 .bbm-card-media {
   position: relative;
   aspect-ratio: 1 / 1;
-  background: #f1e9e2;
+  background: #f7f2ee;
 }
 .bbm-card-media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
 .bbm-badge {
@@ -584,6 +592,13 @@ a:hover {
   border-color: var(--bbm-primary);
   box-shadow: 0 0 0 1px var(--bbm-primary);
 }
+/* Adres başlığının yanındaki "Varsayılan" rozeti: başlıktan ayrık, küçük badge */
+.bbm-address-card .bbm-chip {
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  font-size: 0.72rem;
+  padding: 0.18rem 0.6rem;
+}
 .bbm-address-card input[type="radio"] {
   margin-top: 0.25rem;
 }
@@ -627,13 +642,104 @@ a:hover {
   gap: 2rem;
   align-items: start;
 }
+.bbm-detail-main-wrap {
+  position: relative;
+}
 .bbm-detail-main {
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #f7f2ee;
   border-radius: 12px;
   border: 1px solid var(--bbm-border);
+  cursor: zoom-in;
+  display: block;
 }
+.bbm-zoom-hint {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.6rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--bbm-primary-dark);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  box-shadow: var(--bbm-shadow-sm);
+  pointer-events: none;
+}
+.bbm-detail-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--bbm-primary-dark);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--bbm-shadow-sm);
+}
+.bbm-detail-nav:hover {
+  background: #fff;
+}
+.bbm-detail-nav-prev { left: 0.6rem; }
+.bbm-detail-nav-next { right: 0.6rem; }
+
+/* Lightbox (büyük görsel) — en üst katman, ekranı tam kaplar */
+.bbm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(20, 14, 10, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.bbm-lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  margin: auto;
+  border-radius: 8px;
+  cursor: zoom-out;
+}
+.bbm-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--bbm-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.bbm-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--bbm-text);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.bbm-lightbox-prev { left: 1rem; }
+.bbm-lightbox-next { right: 1rem; }
 .bbm-thumbs {
   display: flex;
   gap: 0.5rem;
@@ -685,6 +791,54 @@ a:hover {
 .bbm-back {
   display: inline-block;
   margin-top: 1rem;
+}
+
+/* ===============================================================
+   İçerik kartları — yoğun çiçek arka planı üstünde okunabilirlik
+   (renkler frontend paletinden: krem panel + gül kurusu kenar/gölge)
+   =============================================================== */
+
+/* Ürün detay sağ sütunu */
+.bbm-detail-info {
+  background: var(--bbm-panel);
+  border: 1px solid var(--bbm-border);
+  border-radius: var(--bbm-radius);
+  padding: 1.6rem 1.5rem;
+  box-shadow: var(--bbm-shadow-sm);
+  backdrop-filter: blur(3px);
+}
+
+/* Düz sayfa başlıkları (Ürünler, Sepet, Siparişler, Ödeme, Admin) —
+   başlık arka planla karışmasın diye okunur bir krem şerit */
+.bbm-page > h1 {
+  display: inline-block;
+  background: var(--bbm-panel);
+  border: 1px solid var(--bbm-border);
+  border-radius: var(--bbm-radius);
+  padding: 0.5rem 1.1rem;
+  box-shadow: var(--bbm-shadow-sm);
+  backdrop-filter: blur(3px);
+}
+
+/* Hakkımızda / İletişim başlık bloğu ve gövdesi */
+.bbm-about-hero,
+.bbm-about-body,
+.bbm-contact-note {
+  background: var(--bbm-panel);
+  border: 1px solid var(--bbm-border);
+  border-radius: var(--bbm-radius);
+  box-shadow: var(--bbm-shadow-sm);
+  backdrop-filter: blur(3px);
+}
+.bbm-about-hero {
+  padding: 1.6rem 1.5rem 1.4rem;
+  margin-bottom: 1.4rem;
+}
+.bbm-about-body {
+  padding: 1.8rem;
+}
+.bbm-contact-note {
+  padding: 1rem 1.3rem;
 }
 
 /* --- Tablo (admin) --- */
@@ -771,10 +925,38 @@ a:hover {
 .bbm-image-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.6rem;
+  padding: 0.5rem;
+  border: 1px solid var(--bbm-border);
+  border-radius: 8px;
+  background: var(--bbm-bg);
 }
 .bbm-image-row input[type="text"] {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+.bbm-image-row .bbm-danger {
+  margin-left: auto;
+}
+.bbm-image-preview {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--bbm-border);
+  flex-shrink: 0;
+}
+.bbm-image-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bbm-cream);
+  color: var(--bbm-muted);
+}
+.bbm-file-btn {
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* --- Modal --- */
@@ -927,8 +1109,8 @@ h1, h2, h3, .bbm-brand {
     position: fixed;
     inset: 0;
     top: 58px;
-    background: rgba(0, 0, 0, 0.25);
-    z-index: 40;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 9998;
   }
   .bbm-nav-drawer {
     position: fixed;
@@ -938,7 +1120,7 @@ h1, h2, h3, .bbm-brand {
     bottom: 0;
     background: var(--bbm-surface);
     border-left: 1px solid var(--bbm-border);
-    z-index: 45;
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
@@ -1138,6 +1320,64 @@ h1, h2, h3, .bbm-brand {
   transform: scale(1.06);
 }
 
+/* Kart görsel galerisi okları */
+.bbm-card-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--bbm-primary-dark);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--bbm-shadow-sm);
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.18s ease;
+  z-index: 2;
+}
+.bbm-card-media:hover .bbm-card-nav {
+  opacity: 1;
+}
+.bbm-card-nav:hover {
+  background: #fff;
+}
+.bbm-card-nav-prev { left: 0.5rem; }
+.bbm-card-nav-next { right: 0.5rem; }
+.bbm-card-dots {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  z-index: 2;
+}
+.bbm-card-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+.bbm-card-dots i.is-active {
+  background: var(--bbm-primary);
+}
+/* Dokunmatik cihazlarda oklar hep görünür */
+@media (hover: none) {
+  .bbm-card-nav {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
+
 /* --- Footer --- */
 .bbm-footer {
   flex-shrink: 0;
@@ -1231,4 +1471,336 @@ h1, h2, h3, .bbm-brand {
   .bbm-trust-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===============================================================
+   Arka plan — küçük, zarif ve NET çiçek/yaprak figürleri (en arkada)
+   =============================================================== */
+.bbm-botanical {
+  position: fixed;
+  inset: 0;
+  z-index: 0;              /* içerik z-index:1 ile hep ÖNDE kalır */
+  pointer-events: none;
+  overflow: hidden;
+}
+/* İçerik her zaman arka planın önünde */
+.bbm-shell > .bbm-main,
+.bbm-shell > .bbm-footer {
+  position: relative;
+  z-index: 1;
+}
+/* Navbar yapışkan KALMALI (sticky) — üstte sabit durur, arka planın önünde.
+   position:relative verirsek sticky bozulur ve kaydırınca üst bar kaybolur. */
+.bbm-shell > .bbm-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Küçük, net, renkli figürler — ekranı sık doldurur */
+.bbm-motif {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  opacity: 0.34;
+  will-change: transform;
+}
+.bbm-motif-sm { width: 40px; height: 40px; opacity: 0.3; }
+.bbm-motif-rose   { color: var(--bbm-rose); }
+.bbm-motif-powder { color: var(--bbm-powder); }
+.bbm-motif-leaf   { color: var(--bbm-leaf); }
+.bbm-motif-lilac  { color: #9b7fb0; }
+.bbm-motif-peach  { color: #e0a56a; }
+.bbm-motif-yellow { color: #e0bd4a; }
+
+/* Animasyonlar (süre/gecikme bileşende satır içi verilir) */
+.bbm-anim-a { animation: bbm-drift 13s ease-in-out infinite; }
+.bbm-anim-b { animation: bbm-drift2 14s ease-in-out infinite; }
+
+@keyframes bbm-drift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(40px, -32px) rotate(10deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+@keyframes bbm-drift2 {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(-38px, 30px) rotate(-9deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Hareket hassasiyeti olanlar için animasyonu durdur */
+@media (prefers-reduced-motion: reduce) {
+  .bbm-motif { animation: none !important; }
+}
+
+/* ===============================================================
+   Adres formu (etiketli alanlar + combobox)
+   =============================================================== */
+.bbm-address-form-title {
+  font-family: var(--bbm-font-head);
+  color: var(--bbm-primary-dark);
+  font-size: 1.3rem;
+  margin: 0 0 0.3rem;
+}
+.bbm-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+.bbm-field-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--bbm-text);
+  margin-bottom: 0.1rem;
+}
+.bbm-field-hint {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--bbm-rose);
+}
+.bbm-address-form textarea {
+  min-height: 70px;
+}
+@media (max-width: 560px) {
+  .bbm-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Hakkımızda / İletişim --- */
+.bbm-about-hero {
+  text-align: center;
+  /* padding kart kuralında verilir (içerik kartları bölümü) */
+}
+.bbm-about-hero h1 {
+  color: var(--bbm-primary-dark);
+  margin: 0.6rem 0 0.4rem;
+}
+.bbm-about-lead {
+  color: var(--bbm-muted);
+  max-width: 48ch;
+  margin: 0 auto;
+}
+.bbm-about-body {
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.75;
+}
+.bbm-about-body p {
+  margin: 0 0 1rem;
+}
+.bbm-about-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+.bbm-about-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.bbm-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem;
+  max-width: 760px;
+  margin: 1.5rem auto 0;
+}
+.bbm-contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  background: var(--bbm-surface);
+  border: 1px solid var(--bbm-border);
+  border-radius: var(--bbm-radius);
+  padding: 1.6rem 1.2rem;
+  color: inherit;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.bbm-contact-card:hover {
+  box-shadow: var(--bbm-shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--bbm-primary);
+  text-decoration: none;
+}
+.bbm-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #f3e3d6;
+  color: var(--bbm-primary-dark);
+  font-size: 1.5rem;
+  margin-bottom: 0.4rem;
+}
+.bbm-contact-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bbm-muted);
+}
+.bbm-contact-value {
+  font-family: var(--bbm-font-head);
+  font-size: 1.25rem;
+  color: var(--bbm-primary-dark);
+}
+.bbm-contact-hint {
+  font-size: 0.85rem;
+  color: var(--bbm-muted);
+}
+.bbm-contact-note {
+  max-width: 620px;
+  margin: 1.8rem auto 0;
+  text-align: center;
+}
+
+/* ===============================================================
+   Palet — sistem geneli feminen vurgular (gül / pudra / adaçayı)
+   =============================================================== */
+
+/* Bağlantılar */
+a:hover {
+  color: var(--bbm-rose-dark);
+}
+
+/* Form kontrollerinde odak rengi gül */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--bbm-rose);
+  outline-offset: 0;
+  border-color: var(--bbm-rose);
+}
+
+/* Etiketler biraz daha belirgin */
+.bbm-field-label {
+  color: var(--bbm-primary-dark);
+}
+
+/* Navbar aktif alt çizgisi gül */
+.bbm-navlink.is-active::after {
+  background: var(--bbm-rose);
+}
+
+/* Çipler: gül tonlu */
+.bbm-chip {
+  border-color: var(--bbm-rose);
+  color: var(--bbm-rose-dark);
+}
+.bbm-chip:hover {
+  background: var(--bbm-rose);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Bölüm başlıkları altına zarif gül aksan çizgisi */
+.bbm-section-head h2,
+.bbm-about-hero h1,
+.bbm-page > h1 {
+  position: relative;
+  padding-bottom: 0.4rem;
+}
+.bbm-section-head h2::after,
+.bbm-about-hero h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--bbm-rose);
+}
+.bbm-section-head.bbm-center h2::after,
+.bbm-about-hero h1::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Güven / iletişim ikonları pudra tonu */
+.bbm-trust-icon,
+.bbm-contact-icon {
+  background: #f6e2dc;
+}
+
+/* CTA bandı: gülden terracotta'ya geçiş */
+.bbm-cta-band {
+  background: linear-gradient(135deg, var(--bbm-rose) 0%, var(--bbm-primary) 55%, var(--bbm-primary-dark) 100%);
+}
+
+/* Hero degradesine hafif gül dokunuşu */
+.bbm-hero {
+  background: linear-gradient(135deg, #fbeef0 0%, #f6e3d9 55%, #ecd9c6 100%);
+}
+
+/* Admin sidebar aktif ve profil sekmesi aktifte ince gül vurgu */
+.bbm-admin-link.is-active,
+.bbm-profile-tab.is-active {
+  box-shadow: inset 3px 0 0 var(--bbm-rose);
+}
+
+/* Fiyat vurgusu sıcak kalsın, sepet rozeti gül */
+.bbm-cart-badge {
+  background: var(--bbm-rose);
+}
+
+/* Kartlar: fildizi zeminden şampanya/beyaz kontrastı + yumuşak gölge ve oval köşe */
+.bbm-card {
+  border-radius: var(--bbm-radius);
+  box-shadow: var(--bbm-shadow-sm);
+}
+.bbm-trust-card,
+.bbm-contact-card,
+.bbm-cart-summary,
+.bbm-admin-form,
+.bbm-stat-card {
+  box-shadow: var(--bbm-shadow-sm);
+}
+
+/* --- WhatsApp butonu --- */
+.bbm-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #25d366;
+  color: #fff;
+  font-weight: 700;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.bbm-wa-btn:hover {
+  background: #1da851;
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.bbm-wa-btn svg { flex-shrink: 0; }
+.bbm-wa-lg {
+  padding: 0.85rem 1.5rem;
+  font-size: 1.05rem;
+}
+.bbm-wa-sm {
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  align-self: flex-start;
+}
+.bbm-wa-wrap {
+  text-align: center;
+  margin-top: 1.6rem;
+}
+.bbm-detail-wa {
+  margin: 0.4rem 0 0.8rem;
 }

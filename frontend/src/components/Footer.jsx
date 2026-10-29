@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+import WhatsAppButton from "./WhatsAppButton";
+
 const INSTAGRAM_URL = "https://instagram.com/birbuketmutluluk2024";
 
 export default function Footer() {
@@ -20,7 +22,8 @@ export default function Footer() {
           <h4>Keşfet</h4>
           <Link to="/">Ana Sayfa</Link>
           <Link to="/urunler">Ürünler</Link>
-          <Link to="/cart">Sepet</Link>
+          <Link to="/hakkimizda">Hakkımızda</Link>
+          <Link to="/iletisim">İletişim</Link>
         </div>
 
         <div className="bbm-footer-col">
@@ -29,6 +32,7 @@ export default function Footer() {
             <span className="bbm-brand-mark">◎</span> @birbuketmutluluk2024
           </a>
           <p className="bbm-footer-text">Yeni ürünler ve ilhamlar için Instagram'da bize katıl.</p>
+          <WhatsAppButton text="WhatsApp'tan Yazın" className="bbm-wa-sm" />
         </div>
       </div>
 

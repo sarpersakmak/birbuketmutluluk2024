@@ -1,9 +1,11 @@
 package com.birbuketmutluluk.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
- * Liste/kart için hafif ürün yanıtı (ana görsel + temel alanlar).
+ * Liste/kart için hafif ürün yanıtı. Kart galerisi için tüm görsel URL'leri
+ * (ana görsel önce) imageUrls'te döner; mainImageUrl geriye dönük uyum içindir.
  */
 public record ProductSummaryResponse(
         Long id,
@@ -15,6 +17,7 @@ public record ProductSummaryResponse(
         boolean featured,
         Long categoryId,
         String categoryName,
-        String mainImageUrl
+        String mainImageUrl,
+        List<String> imageUrls
 ) {
 }

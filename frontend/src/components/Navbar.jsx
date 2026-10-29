@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -26,6 +27,8 @@ export default function Navbar() {
     <>
       <NavLink to="/" end className={navLinkClass} onClick={close}>Ana Sayfa</NavLink>
       <NavLink to="/urunler" className={navLinkClass} onClick={close}>Ürünler</NavLink>
+      <NavLink to="/hakkimizda" className={navLinkClass} onClick={close}>Hakkımızda</NavLink>
+      <NavLink to="/iletisim" className={navLinkClass} onClick={close}>İletişim</NavLink>
       {isAuthenticated && (
         <NavLink to="/cart" className={navLinkClass} onClick={close}>
           Sepet
@@ -66,11 +69,14 @@ export default function Navbar() {
         </button>
       </div>
 
-      {open && (
+      {/* Mobil menü — body'ye portal edilir ki navbar'ın stacking context'ine
+          takılmadan tüm içeriğin EN ÜSTÜNde açılsın (iç içe geçme sorunu). */}
+      {open && createPortal(
         <>
           <div className="bbm-nav-backdrop" onClick={close} />
           <nav className="bbm-nav-drawer">{links}</nav>
-        </>
+        </>,
+        document.body
       )}
     </header>
   );
